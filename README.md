@@ -18,7 +18,7 @@ The TLS configuration that is provided is optimized for modern browsers and shou
 ```go
 package main
 
-mport (
+import (
   // ... elided...
   "net/http"
   "github.com/NYTimes/gziphandler"
