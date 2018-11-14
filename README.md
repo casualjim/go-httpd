@@ -31,7 +31,7 @@ import (
   "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var adminServer = &HTTPFlags{
+var adminServer = &httpd.HTTPFlags{
   Prefix: "admin",
   Port: 12034,
   ListenLimit: 10,
