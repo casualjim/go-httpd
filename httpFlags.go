@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-openapi/swag"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/net/netutil"
 )
@@ -44,7 +43,7 @@ func (h *HTTPFlags) Listener() (net.Listener, error) {
 			err = e
 			return
 		}
-		hh, p, e := swag.SplitHostPort(l.Addr().String())
+		hh, p, e := SplitHostPort(l.Addr().String())
 		if e != nil {
 			h.listener = nil
 			err = e

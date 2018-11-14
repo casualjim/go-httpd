@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-openapi/swag"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/net/netutil"
 )
@@ -37,6 +36,9 @@ func (t *TLSFlags) RegisterFlags(fs *flag.FlagSet) {
 }
 
 func (t *TLSFlags) ApplyDefaults(values *HTTPFlags) {
+	if values == nil {
+		return
+	}
 	// Use http host if https host wasn't defined
 	if t.Host == "" {
 		t.Host = values.Host
@@ -68,7 +70,7 @@ func (t *TLSFlags) Listener() (net.Listener, error) {
 			err = e
 			return
 		}
-		hh, p, e := swag.SplitHostPort(l.Addr().String())
+		hh, p, e := SplitHostPort(l.Addr().String())
 		if e != nil {
 			t.listener = nil
 			err = e

@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/a-h/hsts"
 	flag "github.com/spf13/pflag"
 )
 
@@ -219,6 +220,18 @@ func WithAdmin(handler http.Handler, listener ServerListener, extra ...ServerLis
 	}
 }
 
+func EnableHSTS(maxAge time.Duration, sendPreload bool) Option {
+	if maxAge == 0 {
+		maxAge = time.Hour * 24 * 126 // 126 days (minimum for inclusion in the Chrome HSTS list)
+	}
+	return func(s *defaultServer) {
+		s.hsts = &hstsConfig{
+			MaxAge:      maxAge,
+			SendPreload: sendPreload,
+		}
+	}
+}
+
 // New creates a new application server
 func New(opts ...Option) Server {
 	s := new(defaultServer)
@@ -236,7 +249,19 @@ func New(opts ...Option) Server {
 	for _, apply := range opts {
 		apply(s)
 	}
+
+	if s.hsts != nil {
+		h := hsts.NewHandler(s.handler)
+		h.MaxAge = s.hsts.MaxAge
+		h.SendPreloadDirective = s.hsts.SendPreload
+		s.handler = h
+	}
 	return s
+}
+
+type hstsConfig struct {
+	MaxAge      time.Duration
+	SendPreload bool
 }
 
 type ServerConfig struct {
@@ -262,12 +287,14 @@ type defaultServer struct {
 	handler      http.Handler
 	adminHandler http.Handler
 
-	shutdown       chan struct{}
-	shuttingDown   int32
-	interrupted    bool
-	interrupt      chan os.Signal
-	callbacks      Hook
-	logger         Logging
+	shutdown     chan struct{}
+	shuttingDown int32
+	interrupted  bool
+	interrupt    chan os.Signal
+	callbacks    Hook
+	logger       Logging
+
+	hsts           *hstsConfig
 	onShutdown     func()
 	listeners      []ServerListener
 	adminListeners []ServerListener
