@@ -29,16 +29,6 @@ mport (
 
   ghandlers "github.com/gorilla/handlers"
   "github.com/prometheus/client_golang/prometheus/promhttp"
-  Prefix       string
-	Host         string
-	Port         int
-	ListenLimit  int
-	KeepAlive    time.Duration
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-
-	listenOnce sync.Once
-	listener   net.Listener
 )
 
 var adminServer = &HTTPFlags{
