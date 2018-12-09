@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/go-logr/logr"
 	"log"
 	"net"
 	"net/http"
@@ -153,7 +154,7 @@ func HandlesRequestsWith(h http.Handler) Option {
 }
 
 // LogsWith provides a logger to the server
-func LogsWith(l Logging) Option {
+func LogsWith(l logr.Logger) Option {
 	return func(s *defaultServer) {
 		s.logger = l
 	}
@@ -266,7 +267,7 @@ type hstsConfig struct {
 
 type ServerConfig struct {
 	MaxHeaderSize  int
-	Logger         Logging
+	Logger         logr.Logger
 	Handler        http.Handler
 	Callbacks      Hook
 	CleanupTimeout time.Duration
@@ -292,7 +293,7 @@ type defaultServer struct {
 	interrupted  bool
 	interrupt    chan os.Signal
 	callbacks    Hook
-	logger       Logging
+	logger       logr.Logger
 
 	hsts           *hstsConfig
 	onShutdown     func()
@@ -409,7 +410,7 @@ func (s *defaultServer) handleShutdown(wg *sync.WaitGroup, serversPtr *[]*http.S
 			}()
 			if err := server.Shutdown(ctx); err != nil {
 				// Error from closing listeners, or context timeout:
-				s.logger.Printf("HTTP server Shutdown: %v", err)
+				s.logger.Error(err, "HTTP server Shutdown.")
 			} else {
 				success = true
 			}
@@ -478,10 +479,10 @@ func handleInterrupt(once *sync.Once, s *defaultServer) {
 			if s.interrupted {
 				continue
 			}
-			s.logger.Printf("Shutting down... ")
+			s.logger.Info("Shutting down... ")
 			s.interrupted = true
 			if err := s.Shutdown(); err != nil {
-				s.logger.Printf("[WARN] error during server shutdown: %v", err)
+				s.logger.Error(err, "error during server shutdown.")
 			}
 		}
 	})
@@ -504,20 +505,29 @@ type Server interface {
 	Shutdown() error
 }
 
-// Logging the logger interface for the server
-type Logging interface {
-	Printf(string, ...interface{})
-	Fatalf(string, ...interface{})
-}
-
 type stdLogger struct {
 }
 
-func (s *stdLogger) Printf(format string, args ...interface{}) {
+func (s *stdLogger) Info(format string, args ...interface{}) {
 	log.Printf(format, args...)
 }
-func (s *stdLogger) Fatalf(format string, args ...interface{}) {
+
+func (s *stdLogger) Error(err error, format string, args ...interface{}) {
 	log.Fatalf(format, args...)
+}
+
+func (s *stdLogger) V(level int) logr.InfoLogger {
+	return s
+}
+
+func (s *stdLogger) Enabled() bool { return true }
+func (s *stdLogger) WithValues(keysAndValues ...interface{}) logr.Logger {
+	// not used so just returns self
+	return s
+}
+func (s *stdLogger) WithName(name string) logr.Logger {
+	// not used so just returns self
+	return s
 }
 
 // SplitHostPort splits a network address into a host and a port.

@@ -1,6 +1,7 @@
 package httpd
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"strconv"
@@ -84,13 +85,13 @@ func (h *HTTPFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, err
 	}
 
 	wg.Add(1)
-	s.Logger.Printf("Serving at http://%s", listener.Addr())
+	s.Logger.Info("Serving", "addr", fmt.Sprintf("http://%s", listener.Addr()))
 	go func(l net.Listener) {
 		defer wg.Done()
 		if herr := httpServer.Serve(l); herr != nil && herr != http.ErrServerClosed {
-			s.Logger.Fatalf("%v", herr)
+			s.Logger.Error(herr, "error stopping http listener", "prefix", h.Prefix)
 		}
-		s.Logger.Printf("Stopped serving at http://%s", l.Addr())
+		s.Logger.Info("Stopped serving", "addr", fmt.Sprintf("http://%s", listener.Addr()))
 	}(listener)
 	return httpServer, nil
 }
