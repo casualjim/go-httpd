@@ -1,7 +1,6 @@
 package httpd
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -70,14 +69,17 @@ func (u *UnixSocketFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Serve
 	}
 
 	wg.Add(1)
-	s.Logger.Info("Serving", "addr", fmt.Sprintf("unix://%s", u.Path))
-
+	s.Logger.Printf("Serving at unix://%s", listener.Addr())
 	go func(l net.Listener) {
 		defer wg.Done()
 		if derr := domainSocket.Serve(l); derr != nil && derr != http.ErrServerClosed {
-			s.Logger.Error(derr, "error stopping unix listener", "prefix", u.Prefix)
+			p := u.Prefix
+			if p == "" {
+				p = "unix"
+			}
+			s.Logger.Printf("error stopping %s listener: %v", p, derr)
 		}
-		s.Logger.Info("Stopped serving", "addr", fmt.Sprintf("unix://%s", u.Path))
+		s.Logger.Printf("Stopped serving at unix://%s", listener.Addr())
 	}(listener)
 
 	return domainSocket, nil

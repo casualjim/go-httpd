@@ -177,13 +177,17 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 	}
 
 	wg.Add(1)
-	s.Logger.Info("Serving", "addr", fmt.Sprintf("https://%s", listener.Addr()))
+	s.Logger.Printf("Serving at https://%s", listener.Addr())
 	go func(l net.Listener) {
 		defer wg.Done()
 		if terr := httpsServer.Serve(l); terr != nil && terr != http.ErrServerClosed {
-			s.Logger.Error(terr, "error stopping https listener", "prefix", t.Prefix)
+			p := t.Prefix
+			if p == "" {
+				p = "https"
+			}
+			s.Logger.Printf("error stopping %s listener: %v", p, terr)
 		}
-		s.Logger.Info("Stopped serving", "addr", fmt.Sprintf("https://%s", listener.Addr()))
+		s.Logger.Printf("Stopped serving at http://%s", listener.Addr())
 	}(tls.NewListener(listener, httpsServer.TLSConfig))
 	return httpsServer, nil
 }

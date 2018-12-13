@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/go-logr/logr"
 	"log"
 	"net"
 	"net/http"
@@ -153,8 +152,13 @@ func HandlesRequestsWith(h http.Handler) Option {
 	}
 }
 
+type Logger interface {
+	Printf(string, ...interface{})
+	Fatalf(string, ...interface{})
+}
+
 // LogsWith provides a logger to the server
-func LogsWith(l logr.Logger) Option {
+func LogsWith(l Logger) Option {
 	return func(s *defaultServer) {
 		s.logger = l
 	}
@@ -242,7 +246,7 @@ func New(opts ...Option) Server {
 	s.MaxHeaderSize = maxHeaderSize
 	s.shutdown = make(chan struct{})
 	s.interrupt = make(chan os.Signal, 1)
-	s.logger = &stdLogger{}
+	s.logger = log.New(os.Stderr, "[httpd]", 0)
 	s.onShutdown = func() {}
 	s.listeners = []ServerListener{&DefaultUDSFlags, &DefaultHTTPFlags, &DefaultTLSFlags}
 	s.adminHandler = DefaultAdminHandler
@@ -267,7 +271,7 @@ type hstsConfig struct {
 
 type ServerConfig struct {
 	MaxHeaderSize  int
-	Logger         logr.Logger
+	Logger         Logger
 	Handler        http.Handler
 	Callbacks      Hook
 	CleanupTimeout time.Duration
@@ -293,7 +297,7 @@ type defaultServer struct {
 	interrupted  bool
 	interrupt    chan os.Signal
 	callbacks    Hook
-	logger       logr.Logger
+	logger       Logger
 
 	hsts           *hstsConfig
 	onShutdown     func()
@@ -410,7 +414,7 @@ func (s *defaultServer) handleShutdown(wg *sync.WaitGroup, serversPtr *[]*http.S
 			}()
 			if err := server.Shutdown(ctx); err != nil {
 				// Error from closing listeners, or context timeout:
-				s.logger.Error(err, "HTTP server Shutdown.")
+				s.logger.Fatalf("HTTP server Shutdown: %v", err)
 			} else {
 				success = true
 			}
@@ -479,10 +483,10 @@ func handleInterrupt(once *sync.Once, s *defaultServer) {
 			if s.interrupted {
 				continue
 			}
-			s.logger.Info("Shutting down... ")
+			s.logger.Printf("Shutting down... ")
 			s.interrupted = true
 			if err := s.Shutdown(); err != nil {
-				s.logger.Error(err, "error during server shutdown.")
+				s.logger.Printf("error during server shutdown: %v", err)
 			}
 		}
 	})
@@ -503,31 +507,6 @@ type Server interface {
 	Listen() error
 	Serve() error
 	Shutdown() error
-}
-
-type stdLogger struct {
-}
-
-func (s *stdLogger) Info(format string, args ...interface{}) {
-	log.Printf(format, args...)
-}
-
-func (s *stdLogger) Error(err error, format string, args ...interface{}) {
-	log.Fatalf(format, args...)
-}
-
-func (s *stdLogger) V(level int) logr.InfoLogger {
-	return s
-}
-
-func (s *stdLogger) Enabled() bool { return true }
-func (s *stdLogger) WithValues(keysAndValues ...interface{}) logr.Logger {
-	// not used so just returns self
-	return s
-}
-func (s *stdLogger) WithName(name string) logr.Logger {
-	// not used so just returns self
-	return s
 }
 
 // SplitHostPort splits a network address into a host and a port.
