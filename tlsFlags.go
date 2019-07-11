@@ -119,7 +119,7 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 			tls.CurveP256,
 			tls.X25519,
 		},
-		NextProtos: []string{"http/1.1", "h2"},
+		NextProtos: []string{"h2", "http/1.1"},
 		// https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet#Rule_-_Only_Support_Strong_Protocols
 		MinVersion: tls.VersionTLS12,
 		// Use modern tls mode https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
