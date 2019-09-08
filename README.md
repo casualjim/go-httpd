@@ -37,7 +37,7 @@ var adminServer = &httpd.HTTPFlags{
   ListenLimit: 10,
   KeepAlive: 5*time.Second,
   ReadTimeout: 3*time.Second,
-  WriteTimeout 3*time.Second,
+  WriteTimeout: 3*time.Second,
 }
 
 func main() {
