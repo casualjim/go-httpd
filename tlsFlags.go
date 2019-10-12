@@ -163,7 +163,7 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 		return nil, err
 	}
 
-	if len(httpsServer.TLSConfig.Certificates) == 0 {
+	if len(httpsServer.TLSConfig.Certificates) == 0 && httpsServer.TLSConfig.GetCertificate == nil {
 		if t.Certificate == "" {
 			if t.CertificateKey == "" {
 				return nil, fmt.Errorf("the required flags %q and %q were not specified", prefixed("tls-certificate"), prefixed("tls-key"))
