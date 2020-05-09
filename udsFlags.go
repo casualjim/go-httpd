@@ -12,9 +12,11 @@ import (
 )
 
 type UnixSocketFlags struct {
-	Path       string
-	FlagName   string
-	Prefix     string
+	Path     string
+	FlagName string
+	Prefix   string
+	Handler  http.Handler
+
 	listenOnce sync.Once
 	listener   net.Listener
 }
@@ -60,6 +62,9 @@ func (u *UnixSocketFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Serve
 	domainSocket := new(http.Server)
 	domainSocket.MaxHeaderBytes = int(s.MaxHeaderSize)
 	domainSocket.Handler = s.Handler
+	if u.Handler != nil {
+		domainSocket.Handler = u.Handler
+	}
 	if int64(s.CleanupTimeout) > 0 {
 		domainSocket.IdleTimeout = s.CleanupTimeout
 	}

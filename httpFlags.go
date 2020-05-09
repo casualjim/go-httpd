@@ -19,6 +19,7 @@ type HTTPFlags struct {
 	KeepAlive    time.Duration
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	Handler      http.Handler
 
 	listenOnce sync.Once
 	listener   net.Listener
@@ -78,7 +79,12 @@ func (h *HTTPFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, err
 		httpServer.IdleTimeout = s.CleanupTimeout
 	}
 
+	// First use the default handler, but handlers defined on
+	// the listener take precedence
 	httpServer.Handler = s.Handler
+	if h.Handler != nil {
+		httpServer.Handler = s.Handler
+	}
 	if s.Callbacks != nil {
 		s.Callbacks.ConfigureListener(httpServer, h.Scheme(), listener.Addr().String())
 	}

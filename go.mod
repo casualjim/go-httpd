@@ -5,7 +5,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/net v0.0.0-20191011234655-491137f69257
+	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
 )
 
 go 1.13

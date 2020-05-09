@@ -107,6 +107,9 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 		httpsServer.IdleTimeout = s.CleanupTimeout
 	}
 	httpsServer.Handler = s.Handler
+	if t.Handler != nil { // local values take precedence over the default
+		httpsServer.Handler = t.Handler
+	}
 
 	// Inspired by https://blog.bracebin.com/achieving-perfect-ssl-labs-score-with-go
 	httpsServer.TLSConfig = &tls.Config{

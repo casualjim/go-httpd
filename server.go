@@ -338,6 +338,7 @@ func (s *defaultServer) Serve() (err error) {
 		if !s.hasScheme(server.Scheme()) {
 			continue
 		}
+
 		sc := ServerConfig{
 			Callbacks:      s.callbacks,
 			CleanupTimeout: s.CleanupTimeout,
