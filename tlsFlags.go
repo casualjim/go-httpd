@@ -59,6 +59,11 @@ func (t *TLSFlags) ApplyDefaults(values *HTTPFlags) {
 	if int64(t.WriteTimeout) == 0 {
 		t.WriteTimeout = values.WriteTimeout
 	}
+
+	// Use http write timeout if https write timeout wasn't defined
+	if int64(t.ReadHeaderTimeout) == 0 {
+		t.ReadHeaderTimeout = values.ReadHeaderTimeout
+	}
 }
 
 func (t *TLSFlags) Listener() (net.Listener, error) {

@@ -12,14 +12,16 @@ import (
 )
 
 type HTTPFlags struct {
-	Prefix       string
-	Host         string
-	Port         int
-	ListenLimit  int
-	KeepAlive    time.Duration
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	Handler      http.Handler
+	Prefix            string
+	Host              string
+	Port              int
+	ListenLimit       int
+	KeepAlive         time.Duration
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	ReadHeaderTimeout time.Duration
+
+	Handler http.Handler
 
 	listenOnce sync.Once
 	listener   net.Listener
@@ -33,6 +35,7 @@ func (h *HTTPFlags) RegisterFlags(fs *flag.FlagSet) {
 	fs.DurationVar(&h.KeepAlive, prefixed("keep-alive"), 3*time.Minute, "sets the TCP keep-alive timeouts on accepted connections. It prunes dead TCP connections ( e.g. closing laptop mid-download)")
 	fs.DurationVar(&h.ReadTimeout, prefixed("read-timeout"), 30*time.Second, "maximum duration before timing out read of the request")
 	fs.DurationVar(&h.WriteTimeout, prefixed("write-timeout"), 30*time.Second, "maximum duration before timing out write of the response")
+	fs.DurationVar(&h.ReadHeaderTimeout, prefixed("read-header-timeout"), 5*time.Second, "maximum amount of time allowed to read request headers")
 }
 
 func (h *HTTPFlags) Listener() (net.Listener, error) {
