@@ -3,10 +3,9 @@ package httpd
 import (
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
-
-	"github.com/kardianos/osext"
 
 	flag "github.com/spf13/pflag"
 )
@@ -24,7 +23,7 @@ type UnixSocketFlags struct {
 func (u *UnixSocketFlags) RegisterFlags(fs *flag.FlagSet) {
 	prefixed := prefixer(u.Prefix)
 	if u.Path == "" {
-		if nm, err := osext.Executable(); err == nil {
+		if nm, err := os.Executable(); err == nil {
 			u.Path = filepath.Join("/var/run", nm+".sock")
 		}
 	}

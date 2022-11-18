@@ -4,9 +4,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -118,11 +118,8 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 		PreferServerCipherSuites: true,
 		// Only use curves which have assembly implementations
 		// https://github.com/golang/go/tree/master/src/crypto/elliptic
-		CurvePreferences: []tls.CurveID{
-			tls.CurveP256,
-			tls.X25519,
-		},
-		NextProtos: []string{"h2", "http/1.1"},
+		CurvePreferences: []tls.CurveID{tls.CurveP256, tls.X25519, tls.CurveP384},
+		NextProtos:       []string{"h2", "http/1.1"},
 		// https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet#Rule_-_Only_Support_Strong_Protocols
 		MinVersion: tls.VersionTLS12,
 		// Use intermediate tls mode https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
@@ -147,7 +144,7 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 	}
 
 	if t.CACertificate != "" {
-		caCert, caCertErr := ioutil.ReadFile(t.CACertificate)
+		caCert, caCertErr := os.ReadFile(t.CACertificate)
 		if caCertErr != nil {
 			return nil, caCertErr
 		}
@@ -160,7 +157,6 @@ func (t *TLSFlags) Serve(s ServerConfig, wg *sync.WaitGroup) (*http.Server, erro
 	if s.Callbacks != nil {
 		s.Callbacks.ConfigureTLS(httpsServer.TLSConfig)
 	}
-	httpsServer.TLSConfig.BuildNameToCertificate()
 
 	if err != nil {
 		return nil, err
